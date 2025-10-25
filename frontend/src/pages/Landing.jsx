@@ -9,8 +9,8 @@ export default function Landing() {
   return (
     <div className="">
       <Home />
-      <Contact />
-      <Footer />
+      {/* <Contact /> */}
+      {/* <Footer /> */}
     </div>
   );
 }

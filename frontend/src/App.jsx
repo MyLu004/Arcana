@@ -12,7 +12,7 @@ export default function App() {
         {/* default: navbar + Home + Contact + footer */}
         <Route index element={<Landing />} />
         {/* feature page */}
-        <Route path="feature" element={<MainModel />} />
+        <Route path="mainModel" element={<MainModel />} />
         {/* optional 404 */}
         <Route path="*" element={<div className="p-6">Not Found</div>} />
       </Route>
