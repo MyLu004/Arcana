@@ -40,6 +40,7 @@ class DesignRequest(BaseModel):
     room_type: RoomType
     room_size: str = Field(default="medium", pattern="^(small|medium|large)$")
     style_preferences: List[str] = Field(default_factory=list)
+    budget_max: Optional[float] = Field(default=None, description="Maximum budget in USD")
 
 class DesignResponse(BaseModel):
     """Final API response"""
