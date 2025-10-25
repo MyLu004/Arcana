@@ -1,4 +1,3 @@
-// src/pages/mainModel.jsx
 import React from "react";
 import SideBar from "../components/SideBar";
 import ChatArea from "../components/ChatArea";
