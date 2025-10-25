@@ -56,8 +56,8 @@ class BaseAgent(ABC):
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=temperature,
+                system=system_prompt,
                 messages=[
-                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ]
             )

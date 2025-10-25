@@ -178,10 +178,12 @@ async def generate_design_with_multi_agent(request: DesignRequest):
         print("STARTING MULTI-AGENT ORCHESTRATION")
         print("="*60 + "\n")
         
+        products_dict = [prod.model_dump() for prod in products]
+
         design_result = orchestrator.orchestrate_design(
             user_request=user_request,
             control_image_url=mock_image_url,
-            available_products=products
+            available_products=products_dict  
         )
         
         print("\n" + "="*60)
