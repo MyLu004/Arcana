@@ -7,7 +7,7 @@ import Footer from "../components/Footer";
 
 export default function Landing() {
   return (
-    <div className="">
+    <div className="min-h-screen">
       <Home />
       {/* <Contact /> */}
       {/* <Footer /> */}

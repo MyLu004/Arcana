@@ -8,7 +8,7 @@ export default function SideBar({
 }) {
   return (
     <aside
-      className={`w-64 shrink-0 border-r border-slate-300 bg-[var(--bg-color)] min-h-screen px-3 py-4 ${className}`}
+      className={`w-64 shrink-0 border-r border-slate-300 bg-[var(--bg-color)] px-3 py-4 ${className}`}
     >
       <div className="space-y-3">
         <button

@@ -15,10 +15,10 @@ export default function MainModel({
   className = "",
 }) {
   return (
-    <div className={`flex min-h-screen bg-[#FAF9F6] ${className}`}>
+      <div className={`flex h-[calc(100dvh-10rem)] ${className}`}>
       <SideBar onNewChat={onNewChat} onOpenCad={onOpenCad} />
 
-      <main className="flex-1 p-6 md:p-10">
+      <main className=" flex-1 min-w-0 p-6 md:p-10">
         <div className="mx-auto max-w-6xl">
           <ChatArea
             imageSrc={placeholder}

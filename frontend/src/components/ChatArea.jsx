@@ -31,7 +31,7 @@ function ChatArea({
 }, [messages]);
 
   return (
-    <div className="flex flex-col flex-1 bg-[var(--color-bg)] text-white p-10">
+    <div className="h-[calc(100dvh-15rem)] flex flex-col flex-1 bg-[var(--color-bg)] text-white p-10">
 
        {/* Message history area */}
       <div className="flex-1 overflow-y-auto p-6  space-y-4">
@@ -42,7 +42,7 @@ function ChatArea({
 
       <form
         onSubmit={handleSend}
-        className="p-2 bg-[var(--color-surface)] flex items-center gap-1 text-black rounded-md"
+        className="p-2 bg-[var(--color-bg)] flex items-center gap-1 text-black rounded-md"
       >       
 
         {/* Text input field */}
@@ -52,14 +52,14 @@ function ChatArea({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isLoading}
-          className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black font-bold"
+          className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
         />
         
         {/* Submit button */}
         <button
           type="submit"
           disabled={isLoading}
-          className="bg-[var(--color-accent)] text-black font-bold px-4 py-2 rounded-lg hover:bg-[var(--color-accent-hover)]"
+          className="bg-[var(--color-secondary)] text-black px-4 py-2 rounded-lg hover:bg-[var(--color-button)] hover:text-white"
         >
           Send
         </button>
