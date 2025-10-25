@@ -6,13 +6,19 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
+
+from fastapi.staticfiles import StaticFiles
+from services.image_service import ImageService
+import uuid
+
+import uvicorn
 from pathlib import Path
 import uvicorn
 import uuid
 
 from models import DesignRequest, DesignResponse
 from config import get_settings
-from services.image_service import ImageService
+from services.pkg_service import pkg_service
 
 app = FastAPI(
     title="Agentic Design Architect API",
@@ -20,7 +26,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS
+
+# CORS for your React frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:5173"],
@@ -30,6 +37,8 @@ app.add_middleware(
 )
 
 settings = get_settings()
+
+app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
 
 # Ensure upload directory exists
 Path(settings.upload_dir).mkdir(exist_ok=True)
@@ -80,6 +89,31 @@ async def upload_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.get("/pkg/stats")
+async def get_pkg_stats():
+    """Get Product Knowledge Graph statistics"""
+    return pkg_service.get_graph_stats()
+
+@app.post("/pkg/query")
+async def query_products(request: DesignRequest):
+    """Query compatible products from PKG"""
+    products = pkg_service.get_compatible_products(
+        room_type=request.room_type.value,
+        room_size=request.room_size,
+        style_preference="modern",
+        max_results=5
+    )
+    
+    return {
+        "query": {
+            "room_type": request.room_type,
+            "room_size": request.room_size,
+            "style": request.style_preferences
+        },
+        "products": products,
+        "count": len(products)
+    }
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
