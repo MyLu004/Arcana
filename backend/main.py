@@ -14,6 +14,7 @@ from pathlib import Path
 
 from models import DesignRequest, DesignResponse
 from config import get_settings
+from services.pkg_service import pkg_service
 
 app = FastAPI(
     title="Arcana",
@@ -81,6 +82,31 @@ async def upload_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.get("/pkg/stats")
+async def get_pkg_stats():
+    """Get Product Knowledge Graph statistics"""
+    return pkg_service.get_graph_stats()
+
+@app.post("/pkg/query")
+async def query_products(request: DesignRequest):
+    """Query compatible products from PKG"""
+    products = pkg_service.get_compatible_products(
+        room_type=request.room_type.value,
+        room_size=request.room_size,
+        style_preference="modern",
+        max_results=5
+    )
+    
+    return {
+        "query": {
+            "room_type": request.room_type,
+            "room_size": request.room_size,
+            "style": request.style_preferences
+        },
+        "products": products,
+        "count": len(products)
+    }
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
