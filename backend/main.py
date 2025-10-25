@@ -1,8 +1,10 @@
 # Python and Flask 
 # Phase 1: Core Architecture and Data modeling
-# building the API - Using Fast API# main.py
+# building the API - Using Fast API
+
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 
 from fastapi.staticfiles import StaticFiles
@@ -11,14 +13,16 @@ import uuid
 
 import uvicorn
 from pathlib import Path
+import uvicorn
+import uuid
 
 from models import DesignRequest, DesignResponse
 from config import get_settings
 from services.pkg_service import pkg_service
 
 app = FastAPI(
-    title="Arcana",
-    description="Geometric + Economic AI Design System that generates interior designs and optimizes product selections using multi-agent negotiation.",
+    title="Agentic Design Architect API",
+    description="Geometric + Economic AI Design System",
     version="1.0.0"
 )
 
@@ -39,11 +43,14 @@ app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads"
 # Ensure upload directory exists
 Path(settings.upload_dir).mkdir(exist_ok=True)
 
+# Mount static files
+app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
+
 @app.get("/")
 async def root():
     return {
         "status": "operational",
-        "service": "Arcana Backend API, Agentic based Interior Design",
+        "service": "Agentic Design Architect",
         "version": "1.0.0"
     }
 
