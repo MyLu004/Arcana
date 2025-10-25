@@ -18,7 +18,7 @@ function FileUpload({ onFileUpload }) {
     <div className="my-2">
        {/* Button to open the file picker */}
       <button
-        className="px-4 py-2 bg-white text-black rounded-md font-semibold hover:bg-gray-100"
+        className="px-4 py-2 bg-[var(--color-secondary)] text-black rounded-md hover:bg-[var(--color-button)] hover:text-white"
         onClick={() => fileInputRef.current.click()}
       >
         Upload File 📎

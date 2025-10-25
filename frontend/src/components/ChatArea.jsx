@@ -1,5 +1,5 @@
 import {  useRef, useEffect } from "react";
-
+import FileUpload from "./FileUpload";
 //import { marked } from "marked";    // Converts Markdown to HTML
 //import DOMPurify from "dompurify";  // Sanitizes HTML to prevent XSS
 
@@ -16,7 +16,7 @@ function ChatArea({
   handleSend,         // function to handle message send
   isLoading,          // boolean indicating if bot is processing
   
-  //handleFileUpload,   // Function to handle file uploads
+  handleFileUpload,   // Function to handle file uploads
   //pendingFile,        // Currently selected file (if any)
   //setPendingFile,     // Function to cler selected file
 }) {
@@ -64,7 +64,7 @@ function ChatArea({
           Send
         </button>
 
-        {/* <FileUpload onFileUpload={handleFileUpload} /> */}
+        <FileUpload onFileUpload={handleFileUpload} />
 
       </form>
     </div>
