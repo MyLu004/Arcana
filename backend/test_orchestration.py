@@ -91,10 +91,12 @@ print("  5. Budget Management Agent (Claude Sonnet 4)")
 print("\n⏳ Please wait 30-60 seconds...\n")
 
 try:
+    products_dict = [prod.model_dump() for prod in products]
+    
     result = orchestrator.orchestrate_design(
         user_request=user_request,
         control_image_url=control_image_url,
-        available_products=products
+        available_products=products_dict
     )
     
     print("\n" + "="*70)

@@ -30,7 +30,7 @@ class BaseAgent(ABC):
     def __init__(self, agent_name: str):
         self.agent_name = agent_name
         self.client = Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        self.model = "claude-3-sonnet-20240229"  # Worker agents use Sonnet for speed
+        self.model = "claude-sonnet-4-20250514"  # Worker agents use Sonnet for speed
         self.max_tokens = 2000
         
     @abstractmethod

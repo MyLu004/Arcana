@@ -183,7 +183,7 @@ async def generate_design_with_multi_agent(request: DesignRequest):
         design_result = orchestrator.orchestrate_design(
             user_request=user_request,
             control_image_url=mock_image_url,
-            available_products=products_dict  
+            available_products=products_dict
         )
         
         print("\n" + "="*60)
