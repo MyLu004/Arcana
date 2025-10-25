@@ -1,6 +1,18 @@
 const API_BASE_URL = 'http://localhost:8000';
 
 class ArcanaAPI {
+
+  // helper: safely parse the JSON 
+  async _parseJsonSafe(response) {
+    const ct = response.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      const txt = await response.text();
+      throw new Error(`Expected JSON but got ${ct || 'no content-type'}\nBody:\n${txt}`);
+    }
+    return response.json();
+  }
+
+
   /**
    * Generate design using multi-agent orchestration
    */
@@ -25,9 +37,10 @@ class ArcanaAPI {
         throw new Error(error.detail || 'Design generation failed');
       }
 
-      return await response.json();
-    } catch (error) {
-      console.error('API Error:', error);
+      //return await response.json();
+      return await this._parseJsonSafe(response);
+    } catch (error) { //invalid return format
+      console.error('API Error - here1:', error);
       throw error;
     }
   }
@@ -98,5 +111,10 @@ class ArcanaAPI {
     }
   }
 }
+
+
+// my lu checking stuff for the backend
+
+
 
 export const api = new ArcanaAPI();

@@ -30,7 +30,7 @@ function ChatArea({
             <div
               className={`max-w-[85%] rounded-lg px-4 py-3 ${
                 message.role === 'user'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-[var(--color-secondary)] text-black'
                   : message.isError
                   ? 'bg-red-100 text-red-800 border border-red-300'
                   : 'bg-gray-800 text-gray-100'
@@ -52,7 +52,7 @@ function ChatArea({
             <div className="bg-gray-800 rounded-lg px-4 py-3 flex items-center space-x-3">
               <div className="animate-spin h-5 w-5 border-3 border-blue-500 border-t-transparent rounded-full"></div>
               <span className="text-sm text-gray-200">
-                🤖 Coordinating 5 AI agents...
+                Coordinating 5 AI agents...
               </span>
             </div>
           </div>

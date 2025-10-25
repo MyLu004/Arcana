@@ -61,11 +61,10 @@ export function useChat() {
 
     try {
       // Call backend
-      const result = await api.generateDesign(currentInput, {
-        roomType: 'living_room',
-        roomSize: 'medium',
-        budget: 5000
-      });
+      // api.generateDesign expects positional args: (userPrompt, roomType, roomSize, budget)
+      // Previously an object was passed as the second argument which caused the backend
+      // to receive unexpected types and returned a 422 from FastAPI. Pass correct types.
+      const result = await api.generateDesign(currentInput, 'living_room', 'medium', 5000);
 
       // Add assistant response with design data
       setMessages(prev => [...prev, {

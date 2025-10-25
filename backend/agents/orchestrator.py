@@ -104,7 +104,8 @@ class OrchestratorAgent:
             agent_results["product"] = product_response
             
             if not product_response.success:
-                raise Exception("Product recommendation failed - cannot proceed")
+                # Include the product agent's reasoning to aid debugging and user feedback
+                raise Exception(f"Product recommendation failed - {product_response.reasoning}")
             
             selected_products = product_response.data.get("selected_products", [])
             
