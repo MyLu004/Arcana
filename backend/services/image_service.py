@@ -26,7 +26,7 @@ class ImageService:
         url = "https://api.imgbb.com/1/upload"
         
         payload = {
-            'key': settings.imgbb_api_key,
+            'key': settings.IMGBB_API_KEY,
             'image': base64_image,
             'name': filename
         }
