@@ -38,7 +38,7 @@ export default function Home() {
             <div className="order-2 md:order-1">
               <h1 className="text-[80px] leading-none tracking-wide sm:text-[72px] md:text-[92px]">Arcana</h1>
               <div className="mt-4 max-w-lg rounded p-4 text-zinc-800">
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                Arcana is an AI-powered interior design platform that transforms any room photo or sketch into photorealistic, purchasable designs in seconds. Powered by Anthropic’s Claude multi-agent system and ControlNet, Arcana intelligently understands your style, optimizes layouts, and curates real furniture within your budget. Design beautifully faster, smarter, and effortlessly.
               </div>
               <a href="mainModel" className="mt-10 inline-flex w-full items-center justify-center rounded-full border border-zinc-800/80 bg-[var(--color-bg)] px-8 py-5 font-serif tracking-wide text-zinc-900 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--color-secondary)] hover:text-white hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/30 sm:w-auto md:text-3xl">try us now</a>
             </div>
@@ -70,7 +70,7 @@ export default function Home() {
           <div className="order-2 md:order-1">
             <h1 className="text-[80px] leading-none tracking-wide sm:text-[72px] md:text-[92px]">Arcana</h1>
               <div className="mt-4 max-w-lg rounded p-4 text-zinc-800">
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                Arcana is an AI-powered interior design platform that transforms any room photo or sketch into photorealistic, purchasable designs in seconds. Powered by Anthropic’s Claude multi-agent system and ControlNet, Arcana intelligently understands your style, optimizes layouts, and curates real furniture within your budget. Design beautifully faster, smarter, and effortlessly.
               </div>
             <a href="mainModel" className="mt-10 inline-flex w-full items-center justify-center rounded-full border border-zinc-800/80 bg-[var(--color-bg)] px-8 py-5 font-serif tracking-wide text-zinc-900 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--color-secondary)] hover:text-white hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/30 sm:w-auto md:text-3xl">try us now</a>
           </div>

@@ -2,7 +2,7 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar";
-
+import Contact from "../pages/Contact";
 export default function RootLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-bg)] text-gray-900">
@@ -16,6 +16,8 @@ export default function RootLayout() {
           <Outlet />
         </div>
       </main>
+
+      <Contact />
 
      
       
