@@ -2,6 +2,10 @@
 Product Recommendation Agent
 Queries the Product Knowledge Graph (PKG) and uses Claude to select optimal furniture
 """
+"""
+STEP 1: Enhanced Product Agent with Image URLs
+Replace your existing product_agent.py with this version
+"""
 from typing import Dict, Any, List
 import json
 
@@ -10,23 +14,44 @@ from agents.base_agent import BaseAgent, AgentResponse
 
 class ProductAgent(BaseAgent):
     """
-    Specializes in furniture selection and product recommendations
-    Uses PKG data + Claude reasoning to choose compatible products
+    Enhanced Product Recommendation Agent with Image URLs
     """
+    
+    # Product image mapping (you can expand this or use Unsplash API)
+    PRODUCT_IMAGES = {
+        "LR-SOFA-001": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80",  # Modern sofa
+        "LR-TABLE-001": "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800&q=80",  # Glass coffee table
+        "LR-LAMP-001": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&q=80",  # Arc floor lamp
+        "LR-SIDE-001": "https://images.unsplash.com/photo-1565191999001-551c187427bb?w=800&q=80",  # Side table
+        "BR-BED-001": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=80",  # Platform bed
+        "BR-NIGHT-001": "https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=800&q=80",  # Nightstand
+        "BR-LAMP-001": "https://images.unsplash.com/photo-1543198126-a8505c2e1b3c?w=800&q=80",  # Table lamp
+        "OF-DESK-001": "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=800&q=80",  # Standing desk
+        "OF-CHAIR-001": "https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=800&q=80",  # Office chair
+        "OF-SHELF-001": "https://images.unsplash.com/photo-1594620302200-9a762244a156?w=800&q=80",  # Bookshelf
+        "SS-SOFA-001": "https://images.unsplash.com/photo-1550226891-ef816aed4a98?w=800&q=80",  # Loveseat
+        "SS-TABLE-001": "https://images.unsplash.com/photo-1532372576444-dda954194ad0?w=800&q=80",  # Nesting tables
+    }
     
     def __init__(self):
         super().__init__(agent_name="ProductRecommender")
         
+    def _get_product_image_url(self, product_id: str) -> str:
+        """Get image URL for product"""
+        return self.PRODUCT_IMAGES.get(
+            product_id, 
+            "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80"  # Default furniture image
+        )
+    
+    def _get_product_purchase_url(self, product_id: str, product_name: str) -> str:
+        """Generate purchase URL (mock for demo)"""
+        # In production, this would link to your e-commerce platform
+        encoded_name = product_name.replace(" ", "+")
+        return f"https://www.wayfair.com/keyword.php?keyword={encoded_name}"
+        
     def process(self, context: Dict[str, Any]) -> AgentResponse:
         """
-        Select furniture products based on style analysis and constraints
-        
-        Context expected:
-            - available_products: List[ProductSuggestion] - from PKG query
-            - style_data: Dict - from StyleAgent
-            - room_type: str
-            - room_size: str
-            - budget_max: float (optional)
+        Select furniture products with IMAGE URLS
         """
         self.log_activity("Analyzing product compatibility...")
         
@@ -37,7 +62,7 @@ class ProductAgent(BaseAgent):
         budget_max = context.get("budget_max", None)
         
         if not available_products:
-            self.log_activity("⚠️ No products available from PKG")
+            self.log_activity("No products available from PKG")
             return AgentResponse(
                 agent_name=self.agent_name,
                 success=False,
@@ -111,19 +136,28 @@ Select the best products that maximize style coherence and value."""
             
             product_data = json.loads(cleaned_response)
             
-            # Enrich with full product details
+            # ✨ NEW: Enrich with full product details + IMAGE URLS + PURCHASE LINKS
             selected_products = []
             for selection in product_data.get("selected_products", []):
                 idx = selection.get("product_index", 0)
                 if 0 <= idx < len(available_products):
                     full_product = available_products[idx].copy()
+                    product_id = full_product.get("sku", "")
+                    
+                    # Add visual elements
                     full_product["selection_reason"] = selection.get("selection_reason", "")
                     full_product["priority"] = selection.get("priority", "recommended")
+                    full_product["image_url"] = self._get_product_image_url(product_id)  
+                    full_product["purchase_url"] = self._get_product_purchase_url(  
+                        product_id, 
+                        full_product.get("name", "")
+                    )
+                    
                     selected_products.append(full_product)
             
             product_data["selected_products"] = selected_products
             
-            self.log_activity(f"Selected {len(selected_products)} products, total: ${product_data.get('total_estimated_cost', 0):.2f}")
+            self.log_activity(f"Selected {len(selected_products)} products with images, total: ${product_data.get('total_estimated_cost', 0):.2f}")
             
             return AgentResponse(
                 agent_name=self.agent_name,
@@ -141,6 +175,15 @@ Select the best products that maximize style coherence and value."""
                 key=lambda p: p.get("compatibility_score", 0), 
                 reverse=True
             )[:3]
+            
+            # Add image URLs to fallback products
+            for product in sorted_products:
+                product_id = product.get("sku", "")
+                product["image_url"] = self._get_product_image_url(product_id)
+                product["purchase_url"] = self._get_product_purchase_url(
+                    product_id, 
+                    product.get("name", "")
+                )
             
             total_cost = sum(p.get("base_price", 0) for p in sorted_products)
             

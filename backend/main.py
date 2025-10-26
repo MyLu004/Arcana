@@ -25,6 +25,9 @@ from services.pkg_service import pkg_service
 # Import the orchestrator
 from agents.orchestrator import orchestrator
 
+from services.image_transformation import image_transformer
+
+
 
 app = FastAPI(
     title="Arcana: Multi-Agent Design Architect API",
@@ -137,19 +140,23 @@ class MultiAgentDesignResponse(BaseModel):
     error: Optional[str] = None
 
 
+"""
+STEP 3: Enhanced /agent/design/multi endpoint
+ADD THIS to your existing main.py (replace the old endpoint)
+"""
+
+from services.image_transformation import image_transformer
+
 @app.post("/agent/design/multi", response_model=MultiAgentDesignResponse)
 async def generate_design_with_multi_agent(request: DesignRequest):
-    """ Multi-Agent Design Orchestration Pipeline
+    """
+    Enhanced Multi-Agent Design with Image Transformation
     
-    Uses 5-agent architecture:
-    1. Lead Orchestrator (Claude Opus 4) - coordinates workflow
-    2. Style Analysis Agent (Claude Sonnet 4) - extracts aesthetic preferences  
-    3. Product Recommendation Agent (Claude Sonnet 4) - selects furniture from PKG
-    4. Layout Optimization Agent (Claude Sonnet 4) - spatial planning
-    5. Budget Management Agent (Claude Sonnet 4) - cost optimization
-    
-    This endpoint demonstrates the orchestrator-worker pattern recommended by Anthropic
-    for complex, multi-step reasoning tasks.
+    Returns:
+    - agent_outputs: All agent results
+    - confidence_scores: Agent confidence levels
+    - room_images: {original, transformed}  ← NEW
+    - visual_products: Products with image URLs  ← NEW
     """
     try:
         # Step 1: Get products from PKG
@@ -163,8 +170,9 @@ async def generate_design_with_multi_agent(request: DesignRequest):
         if not products:
             raise HTTPException(status_code=404, detail="No compatible products found in PKG")
         
-        # Step 2: Mock image URL (in production, this comes from upload endpoint)
-        mock_image_url = "https://i.ibb.co/placeholder.png"
+        # Step 2: Get control image URL (if user uploaded one)
+        # For demo, we'll use a placeholder
+        control_image_url = "https://i.ibb.co/placeholder.png"  # Replace with actual uploaded image
         
         # Step 3: Convert request to dict for orchestrator
         user_request = {
@@ -184,19 +192,39 @@ async def generate_design_with_multi_agent(request: DesignRequest):
 
         design_result = orchestrator.orchestrate_design(
             user_request=user_request,
-            control_image_url=mock_image_url,
+            control_image_url=control_image_url,
             available_products=products_dict
         )
-        
-        print("\n" + "="*60)
-        print("ORCHESTRATION COMPLETE")
-        print("="*60 + "\n")
         
         if not design_result.get("success", False):
             raise HTTPException(
                 status_code=500, 
                 detail=f"Orchestration failed: {design_result.get('error', 'Unknown error')}"
             )
+        
+        # Step 5: NEW - Transform the room image
+        style_data = design_result.get("agent_outputs", {}).get("style_analysis", {})
+        transformed_image_url = None
+        
+        if control_image_url and control_image_url != "https://i.ibb.co/placeholder.png":
+            print("\n Transforming room image...")
+            transformed_image_url = image_transformer.transform_room(
+                image_url=control_image_url,
+                style_prompt=style_data,
+                room_type=request.room_type.value
+            )
+        
+        #  Step 6: Add image URLs to response
+        design_result["room_images"] = {
+            "original": control_image_url,
+            "transformed": transformed_image_url
+        }
+        
+        print("\n" + "="*60)
+        print("ORCHESTRATION COMPLETE")
+        print(f"Products with images: {len(design_result.get('agent_outputs', {}).get('product_recommendations', {}).get('selected_products', []))}")
+        print(f"Room transformed: {'Yes' if transformed_image_url else 'No'}")
+        print("="*60 + "\n")
         
         return design_result
         
@@ -207,7 +235,38 @@ async def generate_design_with_multi_agent(request: DesignRequest):
         raise HTTPException(status_code=500, detail=f"Design generation failed: {str(e)}")
 
 
-# Keep the old single-agent endpoint for comparison
+@app.post("/transform-image")
+async def transform_uploaded_image(
+    image_url: str,
+    style: str = "modern minimalist",
+    room_type: str = "living room"
+):
+    """
+    Transform an uploaded room image
+    
+    Use this endpoint to test image transformation separately
+    """
+    try:
+        transformed_url = image_transformer.transform_room(
+            image_url=image_url,
+            style_prompt=style,
+            room_type=room_type
+        )
+        
+        if not transformed_url:
+            raise HTTPException(status_code=500, detail="Transformation failed")
+        
+        return {
+            "success": True,
+            "original_url": image_url,
+            "transformed_url": transformed_url,
+            "style_applied": style
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
 @app.post("/agent/design/single")
 async def generate_design_single_agent(request: DesignRequest):
     """
