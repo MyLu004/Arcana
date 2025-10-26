@@ -247,7 +247,7 @@ pkg_service = ProductKnowledgeGraph()
 # Print stats on load
 if __name__ == "__main__":
     stats = pkg_service.get_graph_stats()
-    print("📊 Product Database Statistics:")
+    print("Product Database Statistics:")
     print(f"   Total Products: {stats['total_products']}")
     print(f"   Price Range: ${stats['price_range']['min']:.2f} - ${stats['price_range']['max']:.2f}")
     print(f"   Total Relationships: {stats['total_relationships']}")

@@ -14,7 +14,7 @@ export default function Navbar() {
           Home
 
           <span
-      class="pointer-events-none absolute inset-x-0 -bottom-0.5 h-[1px] origin-left scale-x-0 rounded
+      className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-[1px] origin-left scale-x-0 rounded
              bg-zinc-900/70 transition-transform duration-200 group-hover:scale-x-100"
       aria-hidden="true"
           ></span>
