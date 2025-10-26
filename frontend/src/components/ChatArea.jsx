@@ -170,6 +170,8 @@ function DesignResults({ data }) {
     budget_max: budget_max  // ← Add budget from root level!
   };
 
+  console.log('budget data kinoko',enhancedBudgetData);
+
   return (
     <div className="mt-4 space-y-4 w-full">
       

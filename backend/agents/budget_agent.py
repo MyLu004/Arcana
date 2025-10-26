@@ -16,6 +16,46 @@ class BudgetAgent(BaseAgent):
     
     def __init__(self):
         super().__init__(agent_name="BudgetManager")
+    def _calculate_budget_confidence(self, budget_data: Dict) -> float:
+        """Calculate confidence based on budget analysis quality"""
+        confidence = 0.5  # Base confidence - start lower
+        
+        # No data = low confidence
+        if not budget_data:
+            return 0.1
+            
+        # Budget status increases confidence
+        status = budget_data.get('budget_status')
+        if status == 'within_budget':
+            confidence += 0.2
+        elif status == 'over_budget':
+            confidence += 0.1  # Still some confidence as we know the status
+        
+        # Having a budget max increases confidence
+        if budget_data.get('budget_max'):
+            confidence += 0.1
+            
+            # Budget utilization affects confidence
+            if budget_data.get('subtotal'):
+                usage = (budget_data.get('subtotal', 0) / budget_data['budget_max']) * 100
+                if 80 <= usage <= 95:  # Optimal utilization
+                    confidence += 0.1
+                elif 60 <= usage <= 100:  # Reasonable utilization
+                    confidence += 0.05
+        
+        # Savings tips indicate deeper analysis
+        if budget_data.get('savings_tips'):
+            confidence += 0.1
+            
+        # Cost breakdown indicates detailed analysis
+        if budget_data.get('cost_breakdown'):
+            confidence += 0.1
+            
+        # Savings opportunities show thorough analysis
+        if budget_data.get('savings_opportunities'):
+            confidence += 0.1
+        
+        return min(confidence, 1.0)  # Cap at 1.0
         
     def process(self, context: Dict[str, Any]) -> AgentResponse:
         """
@@ -29,12 +69,18 @@ class BudgetAgent(BaseAgent):
         
         if not selected_products:
             self.log_activity("No products to analyze")
+            # Create empty budget data for confidence calculation
+            empty_budget_data = {
+                "budget_status": "no_budget_set",
+                "subtotal": 0,
+                "budget_max": budget_max
+            }
             return AgentResponse(
                 agent_name=self.agent_name,
                 success=False,
                 data={},
                 reasoning="No products provided for budget analysis",
-                confidence=0.0
+                confidence=self._calculate_budget_confidence(empty_budget_data)
             )
         
         # Calculate costs with tax and shipping
