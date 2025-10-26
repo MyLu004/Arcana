@@ -1,46 +1,81 @@
-import React from "react";
+import React, { useState } from "react";
 import SideBar from "../components/SideBar";
 import ChatArea from "../components/ChatArea";
+import GeometricCad from "../components/GeometriCAD";
 import { useChat } from "../hooks/useChat";
 
 const placeholder =
   "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop";
 
 export default function MainModel({ className = "" }) {
-  // Use our custom chat hook
-  const { 
-    messages, 
-    input, 
-    setInput, 
-    isLoading, 
-    handleSend, 
+  const {
+    messages,
+    input,
+    setInput,
+    isLoading,
+    handleSend,
     handleFileUpload,
     onNewChat,
     pendingImage,
-    clearPendingImage
+    clearPendingImage,
   } = useChat();
+
+  // "chat" | "cad"
+  const [view, setView] = useState("chat");
 
   return (
     <div className={`flex h-[calc(100dvh-10rem)] ${className}`}>
-      
-      <SideBar 
-        onNewChat={onNewChat}
-        onOpenCad={() => console.log('CAD feature coming soon')}
+      <SideBar
+        onNewChat={() => {
+          onNewChat();
+          setView("chat");
+        }}
+        onOpenCad={() => setView("cad")}
       />
 
       <main className="flex-1 min-w-0 p-6 md:p-10">
-        <div className="mx-auto max-w-6xl">
-          <ChatArea
-            messages={messages}
-            input={input}
-            setInput={setInput}
-            handleSend={handleSend}
-            isLoading={isLoading}
-            handleFileUpload={handleFileUpload}
-            imageSrc={placeholder}
-            pendingImage={pendingImage}
-            clearPendingImage={clearPendingImage}
-          />
+        <div className="mx-auto max-w-6xl h-full flex flex-col">
+          {/* Header / Switcher */}
+          <div className="mb-4 flex items-center gap-2">
+            <button
+              className={`px-3 py-1 rounded-xl text-sm border ${
+                view === "chat" ? "bg-black text-white" : "bg-transparent"
+              }`}
+              onClick={() => setView("chat")}
+            >
+              Chat
+            </button>
+            <button
+              className={`px-3 py-1 rounded-xl text-sm border ${
+                view === "cad" ? "bg-black text-white" : "bg-transparent"
+              }`}
+              onClick={() => setView("cad")}
+            >
+              Geometric CAD
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 min-h-0">
+            {view === "chat" ? (
+              <ChatArea
+                messages={messages}
+                input={input}
+                setInput={setInput}
+                handleSend={handleSend}
+                isLoading={isLoading}
+                handleFileUpload={handleFileUpload}
+                imageSrc={placeholder}
+                pendingImage={pendingImage}
+                clearPendingImage={clearPendingImage}
+              />
+            ) : (
+              <GeometricCad
+                className="h-full"
+                onBackToChat={() => setView("chat")}
+              />
+            )}
+          </div>
         </div>
       </main>
     </div>

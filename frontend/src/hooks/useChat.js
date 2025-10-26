@@ -34,7 +34,7 @@ export function useChat() {
     setMessages(prev => [...prev, {
       id: Date.now(),
       role: 'assistant',
-      content: `📎 Image selected and queued. It will be uploaded when you press Send.`,
+      content: null,
       timestamp: new Date()
     }]);
   }, [pendingPreview]);

@@ -90,7 +90,7 @@ function ChatArea({
               alt="preview" 
               className="h-20 w-28 object-cover rounded" 
             />
-            <span className="text-sm text-white">Ready to upload</span>
+            {/* <span className="text-sm text-white">Ready to upload</span> */}
           </div>
         </div>
       )}
