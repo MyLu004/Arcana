@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import SideBar from "../components/SideBar";
 import ChatArea from "../components/ChatArea";
-import GeometricCad from "../components/GeometriCAD";
+import GeometricCad from "../components/GeometricCAD"; // <- fix name/path if needed
 import { useChat } from "../hooks/useChat";
 
 const placeholder =
@@ -23,13 +23,21 @@ export default function MainModel({ className = "" }) {
   // "chat" | "cad"
   const [view, setView] = useState("chat");
 
+  // Use this to force ChatArea to remount (fresh state) on New Chat
+  const [chatKey, setChatKey] = useState(0);
+
+  const handleNewChat = () => {
+    onNewChat?.();           // your hook’s reset (messages, history, etc.)
+    clearPendingImage?.();   // clear any staged image
+    setInput?.("");          // optional: clear input
+    setChatKey((k) => k + 1); // force ChatArea remount
+    setView("chat");         // make sure we’re on the chat view
+  };
+
   return (
     <div className={`flex h-[calc(100dvh-10rem)] ${className}`}>
       <SideBar
-        onNewChat={() => {
-          onNewChat();
-          setView("chat");
-        }}
+        onNewChat={handleNewChat}
         onOpenCad={() => setView("cad")}
       />
 
@@ -59,6 +67,7 @@ export default function MainModel({ className = "" }) {
           <div className="flex-1 min-h-0">
             {view === "chat" ? (
               <ChatArea
+                key={chatKey}                 // <- remount on New Chat
                 messages={messages}
                 input={input}
                 setInput={setInput}
