@@ -1,8 +1,6 @@
 /**
- * STEP 6: Cost Breakdown Component
- * Save as: frontend/src/components/CostBreakdown.jsx
- * 
- * Install: npm install lucide-react
+ * FIXED: Cost Breakdown Component
+ * Properly handles budget display and calculations
  */
 
 import React from 'react';
@@ -13,17 +11,24 @@ function CostBreakdown({ budgetData, productData }) {
     return null;
   }
 
-  const totalCost = productData?.total_estimated_cost || 0;
-  const budgetMax = budgetData?.budget_max || totalCost;
-  const budgetRemaining = budgetData?.budget_remaining ?? (budgetMax - totalCost);
-  const budgetStatus = budgetData?.budget_status || 
-    (budgetRemaining >= 0 ? 'within_budget' : 'over_budget');
-  
+  // FIX: Get values safely with proper fallbacks
+  const subtotal = budgetData?.subtotal || productData?.total_estimated_cost || 0;
   const taxRate = 0.0825; // 8.25%
-  const shippingCost = totalCost < 1000 ? 150 : 0;
-  const subtotal = totalCost;
-  const tax = subtotal * taxRate;
-  const grandTotal = subtotal + tax + shippingCost;
+  const tax = budgetData?.tax || (subtotal * taxRate);
+  const shipping = budgetData?.shipping ?? (subtotal < 1000 ? 150 : 0);
+  const grandTotal = budgetData?.total || (subtotal + tax + shipping);
+  
+  // CRITICAL FIX: Get budget_max properly, DON'T fall back to totalCost!
+  const budgetMax = budgetData?.budget_max;  // ← FIXED: No fallback to totalCost
+  
+  // Calculate remaining and status
+  let budgetRemaining = null;
+  let budgetStatus = 'no_budget_set';
+  
+  if (budgetMax && budgetMax > 0) {
+    budgetRemaining = budgetData?.budget_remaining ?? (budgetMax - grandTotal);
+    budgetStatus = budgetData?.budget_status || (budgetRemaining >= 0 ? 'within_budget' : 'over_budget');
+  }
 
   const statusConfig = {
     within_budget: {
@@ -31,18 +36,25 @@ function CostBreakdown({ budgetData, productData }) {
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
-      text: '✅ Within Budget'
+      text: 'Within Budget'
     },
     over_budget: {
       icon: AlertCircle,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
       borderColor: 'border-red-200',
-      text: '⚠️ Over Budget'
+      text: 'Over Budget'
+    },
+    no_budget_set: {
+      icon: DollarSign,
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-50',
+      borderColor: 'border-gray-200',
+      text: 'No Budget Set'
     }
   };
 
-  const status = statusConfig[budgetStatus] || statusConfig.within_budget;
+  const status = statusConfig[budgetStatus] || statusConfig.no_budget_set;
   const StatusIcon = status.icon;
 
   return (
@@ -76,11 +88,11 @@ function CostBreakdown({ budgetData, productData }) {
         <div className="flex justify-between text-gray-700">
           <span>
             Shipping
-            {shippingCost === 0 && (
+            {shipping === 0 && (
               <span className="ml-2 text-xs text-green-600 font-semibold">FREE</span>
             )}
           </span>
-          <span className="font-semibold">${shippingCost.toFixed(2)}</span>
+          <span className="font-semibold">${shipping.toFixed(2)}</span>
         </div>
         
         <div className="border-t-2 border-gray-200 pt-3 mt-3">
@@ -91,8 +103,8 @@ function CostBreakdown({ budgetData, productData }) {
         </div>
       </div>
 
-      {/* Budget Progress */}
-      {budgetMax > 0 && (
+      {/* Budget Progress - Only show if budget was set */}
+      {budgetMax && budgetMax > 0 && (
         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
           <div className="flex justify-between mb-2 text-sm">
             <span className="text-gray-600">Budget Used</span>
@@ -101,7 +113,7 @@ function CostBreakdown({ budgetData, productData }) {
             </span>
           </div>
           
-          <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <div
               className={`h-3 rounded-full transition-all duration-500 ${
                 budgetRemaining >= 0 ? 'bg-green-500' : 'bg-red-500'
@@ -110,16 +122,20 @@ function CostBreakdown({ budgetData, productData }) {
             />
           </div>
           
-          {budgetRemaining >= 0 ? (
-            <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
-              <TrendingUp className="w-4 h-4" />
-              ${Math.abs(budgetRemaining).toFixed(2)} remaining in budget
-            </p>
-          ) : (
-            <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-              <AlertCircle className="w-4 h-4" />
-              ${Math.abs(budgetRemaining).toFixed(2)} over budget
-            </p>
+          {budgetRemaining !== null && (
+            <>
+              {budgetRemaining >= 0 ? (
+                <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
+                  <TrendingUp className="w-4 h-4" />
+                  ${Math.abs(budgetRemaining).toFixed(2)} remaining in budget
+                </p>
+              ) : (
+                <p className="text-sm text-red-600 mt-2 flex items-center gap-1 font-semibold">
+                  <AlertCircle className="w-4 h-4" />
+                  ${Math.abs(budgetRemaining).toFixed(2)} over budget!
+                </p>
+              )}
+            </>
           )}
         </div>
       )}
@@ -127,7 +143,7 @@ function CostBreakdown({ budgetData, productData }) {
       {/* Savings Tips */}
       {budgetData?.savings_tips && budgetData.savings_tips.length > 0 && (
         <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h4 className="font-semibold text-blue-900 mb-2">💡 Ways to Save:</h4>
+          <h4 className="font-semibold text-blue-900 mb-2">Ways to Save:</h4>
           <ul className="space-y-1">
             {budgetData.savings_tips.map((tip, index) => (
               <li key={index} className="text-sm text-blue-800 flex items-start gap-2">
@@ -136,6 +152,16 @@ function CostBreakdown({ budgetData, productData }) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+      
+      {/* Over Budget Warning */}
+      {budgetStatus === 'over_budget' && (
+        <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+          <h4 className="font-semibold text-red-900 mb-2">Budget Exceeded</h4>
+          <p className="text-sm text-red-800">
+            The selected products exceed your budget. Consider removing optional items or choosing more affordable alternatives.
+          </p>
         </div>
       )}
     </div>

@@ -12,6 +12,8 @@ export default function MainModel({ className = "" }) {
     messages,
     input,
     setInput,
+    budget, 
+    setBudget,
     isLoading,
     handleSend,
     handleFileUpload,
@@ -30,6 +32,7 @@ export default function MainModel({ className = "" }) {
     onNewChat?.();           // your hook’s reset (messages, history, etc.)
     clearPendingImage?.();   // clear any staged image
     setInput?.("");          // optional: clear input
+    setBudget?.("");
     setChatKey((k) => k + 1); // force ChatArea remount
     setView("chat");         // make sure we’re on the chat view
   };
@@ -71,6 +74,8 @@ export default function MainModel({ className = "" }) {
                 messages={messages}
                 input={input}
                 setInput={setInput}
+                budget={budget} 
+                setBudget={setBudget}
                 handleSend={handleSend}
                 isLoading={isLoading}
                 handleFileUpload={handleFileUpload}

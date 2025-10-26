@@ -1,6 +1,6 @@
 """
-Budget Management Agent
-Tracks costs, suggests alternatives, and optimizes spending
+Budget Management Agent - FIXED
+Ensures budget_max is included in output data
 """
 from typing import Dict, Any, List
 import json
@@ -11,7 +11,7 @@ from agents.base_agent import BaseAgent, AgentResponse
 class BudgetAgent(BaseAgent):
     """
     Specializes in financial analysis and budget optimization
-    Tracks total costs, suggests alternatives, flags overages
+    Tracks total costs, suggests alternatives, and optimizes spending
     """
     
     def __init__(self):
@@ -20,11 +20,6 @@ class BudgetAgent(BaseAgent):
     def process(self, context: Dict[str, Any]) -> AgentResponse:
         """
         Analyze budget and provide cost optimization recommendations
-        
-        Context expected:
-            - selected_products: List[Dict] - from ProductAgent
-            - budget_max: float (optional)
-            - available_products: List[Dict] - all PKG products for alternatives
         """
         self.log_activity("Analyzing budget and costs...")
         
@@ -42,16 +37,24 @@ class BudgetAgent(BaseAgent):
                 confidence=0.0
             )
         
-        # Calculate total cost
-        total_cost = sum(p.get("base_price", 0) for p in selected_products)
+        # Calculate costs with tax and shipping
+        TAX_RATE = 0.0825  # 8.25%
+        subtotal = sum(p.get("base_price", 0) for p in selected_products)
+        tax = subtotal * TAX_RATE
+        shipping = 0 if subtotal >= 1000 else 150
+        total_cost = subtotal + tax + shipping
         
         # Determine budget status
         if budget_max:
             over_budget = total_cost > budget_max
+            budget_remaining = budget_max - total_cost
             budget_utilization = (total_cost / budget_max) * 100
+            budget_status = "over_budget" if over_budget else "within_budget"
         else:
             over_budget = False
+            budget_remaining = None
             budget_utilization = None
+            budget_status = "no_budget_set"
         
         # Format products with costs
         products_breakdown = "\n".join([
@@ -71,8 +74,6 @@ Your task is to analyze spending and provide recommendations:
 
 Respond ONLY with valid JSON in this exact format:
 {
-    "total_cost": 5000.50,
-    "budget_status": "within_budget|over_budget|no_budget_set",
     "cost_breakdown": {
         "essential": 3000.00,
         "recommended": 1500.00,
@@ -87,15 +88,23 @@ Respond ONLY with valid JSON in this exact format:
         }
     ],
     "recommendations": "Budget optimization advice",
-    "value_score": 0.85
+    "value_score": 0.85,
+    "savings_tips": ["tip 1", "tip 2"]
 }"""
 
-        budget_context = f"Budget Limit: ${budget_max}" if budget_max else "Budget: Flexible"
+        budget_context = f"Budget Limit: ${budget_max:.2f}" if budget_max else "Budget: Flexible"
+        budget_alert = ""
+        if over_budget:
+            budget_alert = f"\nOVER BUDGET by ${abs(budget_remaining):.2f}! Suggest alternatives."
         
         user_message = f"""Analyze this design budget:
 
 {budget_context}
-Total Current Cost: ${total_cost:.2f}
+Subtotal: ${subtotal:.2f}
+Tax: ${tax:.2f}
+Shipping: ${shipping:.2f}
+Total Cost: ${total_cost:.2f}
+{budget_alert}
 
 Selected Products:
 {products_breakdown}
@@ -114,15 +123,21 @@ Provide budget analysis and optimization recommendations."""
             
             budget_data = json.loads(cleaned_response)
             
-            # Add calculated fields
-            budget_data["total_cost"] = total_cost
+            # FIX: Always include these calculated fields
+            budget_data["subtotal"] = subtotal
+            budget_data["tax"] = tax
+            budget_data["shipping"] = shipping
+            budget_data["total"] = total_cost
+            budget_data["budget_max"] = budget_max  # ← CRITICAL: Include budget_max!
+            budget_data["budget_status"] = budget_status
             budget_data["over_budget"] = over_budget
+            
             if budget_max:
-                budget_data["budget_remaining"] = budget_max - total_cost
+                budget_data["budget_remaining"] = budget_remaining
                 budget_data["budget_utilization_percent"] = budget_utilization
             
-            status = "OK" if not over_budget else "NOPE"
-            self.log_activity(f"{status} Budget analysis complete: ${total_cost:.2f}")
+            status = "OK" if not over_budget else "OVER BUDGET"
+            self.log_activity(f"{status} Budget analysis: ${total_cost:.2f} / ${budget_max:.2f if budget_max else 'unlimited'}")
             
             return AgentResponse(
                 agent_name=self.agent_name,
@@ -134,23 +149,28 @@ Provide budget analysis and optimization recommendations."""
             
         except json.JSONDecodeError as e:
             self.log_activity(f"JSON parsing failed, using basic budget summary")
-            # Fallback with simple budget analysis
+            # Fallback with all critical fields
             budget_data = {
-                "total_cost": total_cost,
-                "budget_status": "over_budget" if over_budget else "within_budget" if budget_max else "no_budget_set",
+                "subtotal": subtotal,
+                "tax": tax,
+                "shipping": shipping,
+                "total": total_cost,
+                "budget_max": budget_max,  # ← CRITICAL: Include in fallback too!
+                "budget_status": budget_status,
+                "over_budget": over_budget,
                 "cost_breakdown": {
-                    "essential": total_cost * 0.6,
-                    "recommended": total_cost * 0.3,
-                    "optional": total_cost * 0.1
+                    "essential": subtotal * 0.6,
+                    "recommended": subtotal * 0.3,
+                    "optional": subtotal * 0.1
                 },
                 "savings_opportunities": [],
                 "recommendations": "Budget tracking active. Consider prioritizing essential items if over budget.",
                 "value_score": 0.75,
-                "over_budget": over_budget
+                "savings_tips": []
             }
             
             if budget_max:
-                budget_data["budget_remaining"] = budget_max - total_cost
+                budget_data["budget_remaining"] = budget_remaining
                 budget_data["budget_utilization_percent"] = budget_utilization
             
             return AgentResponse(

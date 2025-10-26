@@ -1,58 +1,66 @@
 """
-Product Recommendation Agent
-Queries the Product Knowledge Graph (PKG) and uses Claude to select optimal furniture
-"""
-"""
-STEP 1: Enhanced Product Agent with Image URLs
-Replace your existing product_agent.py with this version
+Product Recommendation Agent - FIXED
+🔥 NEW: Strict budget enforcement
+🔥 NEW: Unique image URL generation
+🔥 NEW: Handles small product pools
 """
 from typing import Dict, Any, List
 import json
+import urllib.parse
+import hashlib
 
 from agents.base_agent import BaseAgent, AgentResponse
 
 
 class ProductAgent(BaseAgent):
     """
-    Enhanced Product Recommendation Agent with Image URLs
+    Specializes in furniture selection with BUDGET DISCIPLINE
     """
-    
-    # Product image mapping (you can expand this or use Unsplash API)
-    PRODUCT_IMAGES = {
-        "LR-SOFA-001": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80",  # Modern sofa
-        "LR-TABLE-001": "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800&q=80",  # Glass coffee table
-        "LR-LAMP-001": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&q=80",  # Arc floor lamp
-        "LR-SIDE-001": "https://images.unsplash.com/photo-1565191999001-551c187427bb?w=800&q=80",  # Side table
-        "BR-BED-001": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=80",  # Platform bed
-        "BR-NIGHT-001": "https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=800&q=80",  # Nightstand
-        "BR-LAMP-001": "https://images.unsplash.com/photo-1543198126-a8505c2e1b3c?w=800&q=80",  # Table lamp
-        "OF-DESK-001": "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=800&q=80",  # Standing desk
-        "OF-CHAIR-001": "https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=800&q=80",  # Office chair
-        "OF-SHELF-001": "https://images.unsplash.com/photo-1594620302200-9a762244a156?w=800&q=80",  # Bookshelf
-        "SS-SOFA-001": "https://images.unsplash.com/photo-1550226891-ef816aed4a98?w=800&q=80",  # Loveseat
-        "SS-TABLE-001": "https://images.unsplash.com/photo-1532372576444-dda954194ad0?w=800&q=80",  # Nesting tables
-    }
     
     def __init__(self):
         super().__init__(agent_name="ProductRecommender")
-        
-    def _get_product_image_url(self, product_id: str) -> str:
-        """Get image URL for product"""
-        return self.PRODUCT_IMAGES.get(
-            product_id, 
-            "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80"  # Default furniture image
-        )
     
-    def _get_product_purchase_url(self, product_id: str, product_name: str) -> str:
-        """Generate purchase URL (mock for demo)"""
-        # In production, this would link to your e-commerce platform
-        encoded_name = product_name.replace(" ", "+")
+    def _get_unique_image_url(self, product_name: str, category: str) -> str:
+        """
+        🔥 FIX: Generate UNIQUE Unsplash URL for each product
+        Uses product name hash as seed for unique images
+        """
+        # Map categories to better search terms
+        search_terms = {
+            'seating': 'chair,armchair,sofa',
+            'table': 'table,furniture',
+            'lighting': 'lamp,light,fixture',
+            'storage': 'shelf,cabinet,storage',
+            'bed': 'bed,bedroom',
+            'desk': 'desk,workspace',
+            'decor': 'decor,decoration,home'
+        }
+        
+        query = search_terms.get(category, 'furniture')
+        
+        # Add style hints from product name
+        name_lower = product_name.lower()
+        if 'modern' in name_lower or 'minimalist' in name_lower:
+            query += ',modern'
+        if 'industrial' in name_lower:
+            query += ',industrial'
+        if 'colorful' in name_lower:
+            query += ',colorful,vibrant'
+        
+        # 🔥 KEY FIX: Use product name hash as unique seed
+        product_hash = hashlib.md5(product_name.encode()).hexdigest()[:8]
+        
+        encoded_query = urllib.parse.quote(query)
+        return f"https://source.unsplash.com/800x600/?{encoded_query}&sig={product_hash}"
+    
+    def _get_purchase_url(self, product_name: str) -> str:
+        """Generate purchase URL"""
+        encoded_name = urllib.parse.quote(product_name)
         return f"https://www.wayfair.com/keyword.php?keyword={encoded_name}"
         
     def process(self, context: Dict[str, Any]) -> AgentResponse:
-        """
-        Select furniture products with IMAGE URLS
-        """
+        """Select products with STRICT BUDGET ENFORCEMENT"""
+        
         self.log_activity("Analyzing product compatibility...")
         
         available_products = context.get("available_products", [])
@@ -62,7 +70,7 @@ class ProductAgent(BaseAgent):
         budget_max = context.get("budget_max", None)
         
         if not available_products:
-            self.log_activity("No products available from PKG")
+            self.log_activity("⚠️ No products available from PKG")
             return AgentResponse(
                 agent_name=self.agent_name,
                 success=False,
@@ -71,63 +79,93 @@ class ProductAgent(BaseAgent):
                 confidence=0.0
             )
         
-        # Format products for Claude
+        self.log_activity(f"📦 Available products: {len(available_products)}")
+        
+        # 🔥 FIX: Calculate usable budget (reserve for tax & shipping)
+        TAX_RATE = 0.0825
+        SHIPPING_THRESHOLD = 1000
+        
+        if budget_max:
+            # Reserve budget for tax and potentially shipping
+            usable_budget = budget_max / (1 + TAX_RATE)
+            if usable_budget < SHIPPING_THRESHOLD:
+                usable_budget -= 150  # Reserve $150 for shipping
+            
+            self.log_activity(f"💰 Budget: ${budget_max:.2f} total → ${usable_budget:.2f} for products")
+        else:
+            usable_budget = None
+            self.log_activity("💰 No budget constraint")
+        
+        # 🔥 NEW: Adapt strategy for small product pools
+        if len(available_products) < 5:
+            self.log_activity(f"⚠️ Small product pool ({len(available_products)} items)")
+        
+        # Format products
         products_summary = "\n".join([
-            f"Product {i+1}: {p.get('name', 'Unknown')} - ${p.get('base_price', 0)} "
-            f"({p.get('material', 'N/A')}, compatibility: {p.get('compatibility_score', 0):.2f})"
+            f"Product {i}: {p.get('name', 'Unknown')} - ${p.get('base_price', 0)} "
+            f"({p.get('material', 'N/A')}, {p.get('category', 'furniture')}, score: {p.get('compatibility_score', 0):.2f})"
             for i, p in enumerate(available_products)
         ])
         
-        system_prompt = """You are an expert furniture curator and interior design consultant.
+        # 🔥 FIX: Enhanced system prompt with BUDGET ENFORCEMENT
+        system_prompt = f"""You are an expert furniture curator with ABSOLUTE BUDGET DISCIPLINE.
 
-Your task is to select the BEST products for a specific room design based on:
-1. Style compatibility with user preferences
-2. Budget constraints
-3. Spatial appropriateness for room size
-4. Complementary materials and finishes
-5. Product compatibility scores from our knowledge graph
+CRITICAL RULES:
+{"1. MAXIMUM PRODUCT SUBTOTAL: $" + f"{usable_budget:.2f}" if usable_budget else "1. No budget limit"}
+{"2. You MUST select products where SUM of base_price is UNDER this limit" if usable_budget else ""}
+{"3. Tax (8.25%) and shipping will be added later, so stay WELL UNDER!" if usable_budget else ""}
 
-Respond ONLY with valid JSON in this exact format:
-{
+BUDGET STRATEGY:
+{"- TIGHT BUDGET (<$500): Select ONLY 2-3 ESSENTIAL items under $" + f"{usable_budget:.2f}" if usable_budget and usable_budget < 450 else ""}
+{"- MODERATE BUDGET ($500-$2000): Select 3-5 balanced items" if usable_budget and 450 <= usable_budget < 1800 else ""}
+{"- COMFORTABLE BUDGET (>$2000): Select 5-7 items for complete design" if not usable_budget or usable_budget >= 1800 else ""}
+
+PRODUCT POOL SIZE: {len(available_products)} products available
+{"⚠️ LIMITED OPTIONS: Work with what's available, prioritize essentials" if len(available_products) < 5 else ""}
+
+Respond ONLY with valid JSON:
+{{
     "selected_products": [
-        {
+        {{
             "product_index": 0,
             "product_name": "name",
-            "selection_reason": "why this product was chosen",
+            "selection_reason": "why chosen",
             "priority": "essential|recommended|optional"
-        }
+        }}
     ],
-    "total_estimated_cost": 5000.50,
+    "total_estimated_cost": 350.00,
     "style_coherence_score": 0.92,
-    "reasoning": "Overall explanation of product selection strategy"
-}
+    "reasoning": "Overall selection strategy"
+}}"""
 
-Select 3-7 products that create a cohesive design."""
-
-        style_summary = f"""
-Style Preferences:
-- Primary Style: {style_data.get('primary_style', 'modern')}
+        style_summary = f"""Style Preferences:
+- Primary: {style_data.get('primary_style', 'modern')}
 - Mood: {style_data.get('mood', 'comfortable')}
-- Color Palette: {', '.join(style_data.get('color_palette', ['neutral']))}
-- Materials: {', '.join(style_data.get('materials', ['mixed']))}
-"""
+- Colors: {', '.join(style_data.get('color_palette', ['neutral']))}
+- Materials: {', '.join(style_data.get('materials', ['mixed']))}"""
 
-        user_message = f"""Select optimal furniture for this design:
+        # 🔥 FIX: Add explicit budget warning
+        budget_warning = ""
+        if budget_max and budget_max < 500:
+            budget_warning = f"\n\n⚠️ CRITICAL: This is a VERY TIGHT budget of ${budget_max}. You MUST select ONLY 2-3 essential items that cost UNDER ${usable_budget:.2f} total. DO NOT exceed this limit!"
+
+        user_message = f"""Select furniture for this design:
 
 Room: {room_type} ({room_size} size)
-Budget: {'$' + str(budget_max) if budget_max else 'Flexible'}
+Budget: {'$' + str(budget_max) + " (strict limit)" if budget_max else 'Flexible'}
+{budget_warning}
 
 {style_summary}
 
 Available Products:
 {products_summary}
 
-Select the best products that maximize style coherence and value."""
+{"SELECT ONLY PRODUCTS THAT FIT BUDGET!" if budget_max else "Select best products for coherent design."}"""
 
         try:
-            response_text = self._call_claude(system_prompt, user_message, temperature=0.5)
+            response_text = self._call_claude(system_prompt, user_message, temperature=0.4)
             
-            # Parse JSON response
+            # Parse JSON
             cleaned_response = response_text.strip()
             if cleaned_response.startswith("```json"):
                 cleaned_response = cleaned_response.split("```json")[1].split("```")[0].strip()
@@ -136,72 +174,56 @@ Select the best products that maximize style coherence and value."""
             
             product_data = json.loads(cleaned_response)
             
-            # ✨ NEW: Enrich with full product details + IMAGE URLS + PURCHASE LINKS
+            # Enrich products with full details + unique images
             selected_products = []
+            actual_total = 0
+            
             for selection in product_data.get("selected_products", []):
                 idx = selection.get("product_index", 0)
                 if 0 <= idx < len(available_products):
                     full_product = available_products[idx].copy()
-                    product_id = full_product.get("sku", "")
                     
-                    # Add visual elements
-                    full_product["selection_reason"] = selection.get("selection_reason", "")
-                    full_product["priority"] = selection.get("priority", "recommended")
-                    full_product["image_url"] = self._get_product_image_url(product_id)  
-                    full_product["purchase_url"] = self._get_product_purchase_url(  
-                        product_id, 
-                        full_product.get("name", "")
+                    # 🔥 NEW: Add unique image URL
+                    full_product["image_url"] = self._get_unique_image_url(
+                        full_product.get("name", "furniture"),
+                        full_product.get("category", "furniture")
+                    )
+                    full_product["purchase_url"] = self._get_purchase_url(
+                        full_product.get("name", "furniture")
                     )
                     
+                    full_product["selection_reason"] = selection.get("selection_reason", "")
+                    full_product["priority"] = selection.get("priority", "recommended")
                     selected_products.append(full_product)
+                    actual_total += full_product.get("base_price", 0)
+            
+            # 🔥 FIX: Validate budget constraint
+            if usable_budget and actual_total > usable_budget:
+                self.log_activity(f"⚠️ Budget exceeded! {actual_total:.2f} > {usable_budget:.2f}, enforcing constraint...")
+                # Remove optional items until within budget
+                selected_products = self._enforce_budget(selected_products, usable_budget)
+                actual_total = sum(p.get("base_price", 0) for p in selected_products)
             
             product_data["selected_products"] = selected_products
+            product_data["total_estimated_cost"] = actual_total
             
-            self.log_activity(f"Selected {len(selected_products)} products with images, total: ${product_data.get('total_estimated_cost', 0):.2f}")
+            self.log_activity(f"✅ Selected {len(selected_products)} products, subtotal: ${actual_total:.2f}")
             
             return AgentResponse(
                 agent_name=self.agent_name,
                 success=True,
                 data=product_data,
-                reasoning=product_data.get("reasoning", "Products selected for optimal style coherence"),
+                reasoning=product_data.get("reasoning", "Products selected for optimal design"),
                 confidence=product_data.get("style_coherence_score", 0.85)
             )
             
         except json.JSONDecodeError as e:
-            self.log_activity(f"JSON parsing failed, using top-rated products")
-            # Fallback: select top 3 by compatibility score
-            sorted_products = sorted(
-                available_products, 
-                key=lambda p: p.get("compatibility_score", 0), 
-                reverse=True
-            )[:3]
-            
-            # Add image URLs to fallback products
-            for product in sorted_products:
-                product_id = product.get("sku", "")
-                product["image_url"] = self._get_product_image_url(product_id)
-                product["purchase_url"] = self._get_product_purchase_url(
-                    product_id, 
-                    product.get("name", "")
-                )
-            
-            total_cost = sum(p.get("base_price", 0) for p in sorted_products)
-            
-            return AgentResponse(
-                agent_name=self.agent_name,
-                success=True,
-                data={
-                    "selected_products": sorted_products,
-                    "total_estimated_cost": total_cost,
-                    "style_coherence_score": 0.7,
-                    "reasoning": "Fallback: Selected top products by compatibility score"
-                },
-                reasoning="Used compatibility-based fallback selection",
-                confidence=0.7
-            )
+            self.log_activity(f"JSON parsing failed: {e}")
+            # Fallback: budget-aware selection
+            return self._fallback_selection(available_products, usable_budget)
         
         except Exception as e:
-            self.log_activity(f"Product selection failed: {str(e)}")
+            self.log_activity(f"Error: {str(e)}")
             return AgentResponse(
                 agent_name=self.agent_name,
                 success=False,
@@ -209,6 +231,73 @@ Select the best products that maximize style coherence and value."""
                 reasoning=f"Error: {str(e)}",
                 confidence=0.0
             )
+    
+    def _enforce_budget(self, products: List[Dict], max_budget: float) -> List[Dict]:
+        """Remove optional items until within budget"""
+        # Sort by priority: essential > recommended > optional
+        priority_order = {"essential": 0, "recommended": 1, "optional": 2}
+        sorted_products = sorted(
+            products,
+            key=lambda p: (priority_order.get(p.get("priority", "recommended"), 1), -p.get("base_price", 0))
+        )
+        
+        # Keep adding until budget reached
+        selected = []
+        running_total = 0
+        
+        for product in sorted_products:
+            price = product.get("base_price", 0)
+            if running_total + price <= max_budget:
+                selected.append(product)
+                running_total += price
+        
+        return selected
+    
+    def _fallback_selection(self, products: List[Dict], max_budget: float) -> AgentResponse:
+        """Budget-aware fallback selection"""
+        # Sort by compatibility score
+        sorted_products = sorted(
+            products,
+            key=lambda p: p.get("compatibility_score", 0),
+            reverse=True
+        )
+        
+        # Select products within budget
+        selected = []
+        running_total = 0
+        
+        for product in sorted_products:
+            price = product.get("base_price", 0)
+            if max_budget is None or running_total + price <= max_budget:
+                # Add unique image
+                product["image_url"] = self._get_unique_image_url(
+                    product.get("name", "furniture"),
+                    product.get("category", "furniture")
+                )
+                product["purchase_url"] = self._get_purchase_url(
+                    product.get("name", "furniture")
+                )
+                product["priority"] = "recommended"
+                selected.append(product)
+                running_total += price
+                
+                if len(selected) >= 3:  # Minimum 3 products
+                    break
+        
+        total_cost = sum(p.get("base_price", 0) for p in selected)
+        
+        return AgentResponse(
+            agent_name=self.agent_name,
+            success=True,
+            data={
+                "selected_products": selected,
+                "total_estimated_cost": total_cost,
+                "style_coherence_score": 0.7,
+                "reasoning": "Fallback: Selected by compatibility score within budget"
+            },
+            reasoning="Used compatibility-based fallback",
+            confidence=0.7
+        )
 
 
 # Create singleton

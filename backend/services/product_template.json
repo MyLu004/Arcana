@@ -1,0 +1,86 @@
+[
+  {
+    "comment": "TEMPLATE - Copy this block and fill in your details",
+    "id": "ROOM-TIER-###",
+    "name": "Product Name Here",
+    "category": "seating OR table OR lighting OR storage OR decor OR bed OR desk",
+    "base_price": 99.99,
+    "material": "wood OR metal OR fabric OR glass OR leather OR plastic OR natural",
+    "style": "modern OR industrial OR bohemian OR minimalist OR rustic",
+    "room_type": ["living_room", "bedroom", "office", "kitchen"],
+    "dimensions": {
+      "width": 24,
+      "depth": 18,
+      "height": 30
+    },
+    "size_fit": ["small", "medium", "large"]
+  },
+  
+  {
+    "comment": "EXAMPLE 1: Budget Living Room Chair",
+    "id": "LR-BUDGET-001",
+    "name": "Modern Accent Chair Blue",
+    "category": "seating",
+    "base_price": 149.99,
+    "material": "fabric",
+    "style": "modern",
+    "room_type": ["living_room", "bedroom"],
+    "dimensions": {
+      "width": 28,
+      "depth": 30,
+      "height": 34
+    },
+    "size_fit": ["small", "medium", "large"]
+  },
+  
+  {
+    "comment": "EXAMPLE 2: Mid-Range Office Desk",
+    "id": "OF-MID-001",
+    "name": "Standing Desk Adjustable 60in",
+    "category": "desk",
+    "base_price": 549.99,
+    "material": "wood",
+    "style": "modern",
+    "room_type": ["office"],
+    "dimensions": {
+      "width": 60,
+      "depth": 30,
+      "height": 48
+    },
+    "size_fit": ["medium", "large"]
+  },
+  
+  {
+    "comment": "EXAMPLE 3: Budget Decor Item",
+    "id": "MULTI-001",
+    "name": "Succulent Planter Set 3pc",
+    "category": "decor",
+    "base_price": 29.99,
+    "material": "ceramic",
+    "style": "modern",
+    "room_type": ["living_room", "bedroom", "office"],
+    "dimensions": {
+      "width": 6,
+      "depth": 6,
+      "height": 8
+    },
+    "size_fit": ["small", "medium", "large"]
+  },
+  
+  {
+    "comment": "ADD YOUR PRODUCTS BELOW - Just copy the template block above!",
+    "id": "LR-BUDGET-NEW-001",
+    "name": "Your Product Name",
+    "category": "seating",
+    "base_price": 99.99,
+    "material": "fabric",
+    "style": "modern",
+    "room_type": ["living_room"],
+    "dimensions": {
+      "width": 24,
+      "depth": 24,
+      "height": 30
+    },
+    "size_fit": ["small", "medium", "large"]
+  }
+]
