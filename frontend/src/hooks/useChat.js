@@ -121,7 +121,7 @@ export function useChat() {
     setMessages([{
       id: 1,
       role: 'assistant',
-      content: '🆕 New chat started! What space would you like to design?',
+      content: 'Hello! I\'m Arcana. Describe your dream space and I\'ll design it for you with AI-powered multi-agent orchestration.',
       timestamp: new Date()
     }]);
     setInput('');

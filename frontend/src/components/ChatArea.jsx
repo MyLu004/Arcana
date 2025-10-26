@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import FileUpload from "./FileUpload";
 import BeforeAfterSlider from "./BeforeAfterSlider";
 import ProductGallery from "./ProductGallery";
@@ -15,12 +15,23 @@ function ChatArea({
   clearPendingImage,
 }) {
   const bottomRef = useRef(null);
+  const [budget, setBudget] = useState("")
 
   useEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    handleSend({
+      text: input,
+      budget: budget === "" ? null : Number(budget), // send a number or null
+      image: pendingImage || null,
+    });}
 
   return (
     <div className="h-[calc(100dvh-15rem)] flex flex-col flex-1 bg-[var(--color-bg)] text-white p-10 rounded-lg shadow-xl">
@@ -108,6 +119,18 @@ function ChatArea({
           disabled={isLoading}
           className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black disabled:bg-gray-200"
         />
+
+        <input
+          type="number"
+          min="0"
+          step="1"
+          placeholder="Budget ($)"
+          value={budget}
+          onChange={(e) => setBudget(e.target.value)}
+          disabled={isLoading}
+          className="w-40 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black disabled:bg-gray-200"
+          aria-label="Budget in USD"
+        />
         
         <button
           type="submit"
@@ -118,7 +141,9 @@ function ChatArea({
         </button>
 
         <FileUpload onFileUpload={handleFileUpload} />
+
       </form>
+      
     </div>
   );
 }
