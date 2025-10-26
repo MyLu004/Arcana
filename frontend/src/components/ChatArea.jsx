@@ -275,7 +275,7 @@ function ChatArea({
           disabled={isLoading || !input.trim()}
           className="bg-[var(--color-secondary)] text-black px-4 py-2 rounded-lg hover:bg-[var(--color-button)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Takes Time' : 'Send'}
+          {isLoading ? '...' : 'Send'}
         </button>
 
         <FileUpload onFileUpload={handleFileUpload} />
