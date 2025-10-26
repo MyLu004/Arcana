@@ -15,7 +15,9 @@ export default function MainModel({ className = "" }) {
     isLoading, 
     handleSend, 
     handleFileUpload,
-    onNewChat 
+    onNewChat,
+    pendingImage,
+    clearPendingImage
   } = useChat();
 
   return (
@@ -35,6 +37,8 @@ export default function MainModel({ className = "" }) {
             isLoading={isLoading}
             handleFileUpload={handleFileUpload}
             imageSrc={placeholder}
+            pendingImage={pendingImage}
+            clearPendingImage={clearPendingImage}
           />
         </div>
       </main>

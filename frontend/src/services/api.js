@@ -16,7 +16,7 @@ class ArcanaAPI {
   /**
    * Generate design using multi-agent orchestration
    */
-  async generateDesign(userPrompt, roomType = 'living_room', roomSize = 'medium', budget = null) {
+  async generateDesign(userPrompt, roomType = 'living_room', roomSize = 'medium', budget = null, controlImageUrl = null) {
     try {
       const response = await fetch(`${API_BASE_URL}/agent/design/multi`, {
         method: 'POST',
@@ -28,7 +28,9 @@ class ArcanaAPI {
           room_type: roomType,
           room_size: roomSize,
           style_preferences: ['modern', 'minimalist'],
-          budget_max: budget
+          budget_max: budget,
+          // optionally include a control image URL (from upload)
+          ...(controlImageUrl ? { control_image_url: controlImageUrl } : {})
         })
       });
 

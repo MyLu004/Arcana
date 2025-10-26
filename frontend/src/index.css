@@ -29,13 +29,17 @@
 /* Base element styles */
 @layer base {
   html { @apply antialiased; }
-  body {
+  body{
     font-family: var(--font-text);
     color: var(--color-text);
     background-color: var(--color-bg);
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h3, h4{
+    font-family :var(var(--font-text));
+  }
+
+  h1, h2 {
     font-family: var(--font-title);
     color: var(--color-text);
     line-height: 1.1;
