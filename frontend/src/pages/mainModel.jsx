@@ -22,6 +22,7 @@ export default function MainModel({ className = "" }) {
 
   return (
     <div className={`flex h-[calc(100dvh-10rem)] ${className}`}>
+      
       <SideBar 
         onNewChat={onNewChat}
         onOpenCad={() => console.log('CAD feature coming soon')}
