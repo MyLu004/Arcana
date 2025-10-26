@@ -10,7 +10,7 @@ export default function Contact({
 }) {
   return (
     <footer
-      className={`w-full h-max border-t bg-white/80 backdrop-blur text-gray-700 ${className}`}
+      className={`w-full border-t bg-white/80 backdrop-blur text-gray-700 ${className}`}
     >
       <div className="mx-auto max-w-6xl px-4 py-4">
         <div className="flex flex-col gap-2 text-sm md:flex-row md:items-center md:justify-between">

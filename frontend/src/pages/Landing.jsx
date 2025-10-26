@@ -7,7 +7,7 @@ import Footer from "../components/Footer";
 
 export default function Landing() {
   return (
-    <div className="h-[calc(100dvh-15rem)]">
+    <div className="">
       <Home />
 
       {/* <Footer /> */}
