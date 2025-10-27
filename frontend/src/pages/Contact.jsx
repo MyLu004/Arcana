@@ -3,9 +3,9 @@ import React from "react";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 export default function Contact({
-  email = "arcana@copany.com",
+  email = "arcana@company.com",
   phone = "(123)-456-789",
-  address = "123 Random St, Long Beach CA 56789",
+  address = "CSULB, Long Beach CA 90840",
   className = "",
 }) {
   return (

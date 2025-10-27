@@ -12,8 +12,10 @@ class ImageTransformationService:
     """
     
     def __init__(self):
-        # Set API key
-        self.api_key = os.getenv("REPLICATE_API_TOKEN")
+        # Get API key from settings
+        from config import get_settings
+        settings = get_settings()
+        self.api_key = settings.REPLICATE_API_TOKEN
         if self.api_key:
             os.environ["REPLICATE_API_TOKEN"] = self.api_key
     

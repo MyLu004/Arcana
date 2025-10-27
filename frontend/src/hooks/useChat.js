@@ -15,6 +15,7 @@ export function useChat() {
 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentBudget, setCurrentBudget] = useState(null);
   
   // Image handling
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -50,9 +51,21 @@ export function useChat() {
     
     if (eventOrData?.text !== undefined) {
       // Called with data object from ChatArea: { text, budget, image }
+      const budget = eventOrData.budget ? Number(eventOrData.budget) : null;
+      
+      // Update current budget
+      setCurrentBudget(budget);
+      
+      console.log('DEBUG: Budget from ChatArea:', {
+        eventOrData,
+        rawBudget: eventOrData.budget,
+        parsedBudget: budget,
+        type: typeof eventOrData.budget
+      });
+      
       messageData = {
         text: eventOrData.text,
-        budget: eventOrData.budget,
+        budget: budget,
         image: eventOrData.image
       };
     } else {
@@ -60,6 +73,11 @@ export function useChat() {
       if (eventOrData?.preventDefault) {
         eventOrData.preventDefault();
       }
+      console.log('DEBUG: Form Event Budget:', {
+        input,
+        pendingPreview,
+        type: 'form_event'
+      });
       messageData = {
         text: input.trim(),
         budget: null,
@@ -89,6 +107,15 @@ export function useChat() {
     setIsLoading(true);
 
     try {
+      // Debug message data before processing
+      console.log('DEBUG: Processing message data:', {
+        text: messageData.text,
+        hasBudget: messageData.budget !== undefined,
+        budgetValue: messageData.budget,
+        budgetType: typeof messageData.budget,
+        hasImage: !!messageData.image
+      });
+
       let controlImageUrl = null;
       
       // STEP 1: Upload image if present (with loading state)
@@ -98,7 +125,7 @@ export function useChat() {
           setMessages(prev => [...prev, {
             id: Date.now() + 1,
             role: 'assistant',
-            content: '📤 Uploading your image...',
+            content: 'Uploading your image...',
             isLoading: true,
             timestamp: new Date()
           }]);
@@ -149,11 +176,25 @@ export function useChat() {
       }]);
 
       // STEP 3: Call backend with budget
+      // Debug the budget value
+      console.log('Budget before parsing:', {
+        userBudget,
+        type: typeof userBudget,
+        messageData
+      });
+      
+      // Ensure budget is properly passed as number
+      const parsedBudget = userBudget ? Number(userBudget) : null;
+      console.log('Parsed budget:', {
+        parsedBudget,
+        type: typeof parsedBudget
+      });
+      
       const result = await api.generateDesign(
         currentInput,
         'living_room',
         'medium',
-        userBudget, // ← Budget sent here!
+        parsedBudget, // Convert to number and ensure it's not undefined
         controlImageUrl
       );
 
@@ -166,7 +207,10 @@ export function useChat() {
           id: Date.now() + 4,
           role: 'assistant',
           content: 'Your custom design is ready!',
-          designData: result,
+          designData: {
+            ...result,
+            budget_max: parsedBudget  // Include budget in design data
+          },
           timestamp: new Date()
         }
       ]);
@@ -220,6 +264,8 @@ export function useChat() {
     onNewChat,
     uploadedImage,
     pendingImage: pendingPreview,
-    clearPendingImage
+    clearPendingImage,
+    currentBudget,
+    setCurrentBudget
   };
 }

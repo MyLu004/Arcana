@@ -108,7 +108,7 @@ function ChatArea({
 
       {/* Input Form */}
       <form
-        onSubmit={handleSend}
+        onSubmit={onSubmit}
         className="p-2 bg-[var(--color-bg)] flex items-center gap-1 text-black rounded-md border-t border-gray-700"
       >
         <input
@@ -150,13 +150,27 @@ function ChatArea({
 
 //  ENHANCED: Component to display complete design results
 function DesignResults({ data }) {
-  const { agent_outputs, confidence_scores, room_images } = data;
+  const { agent_outputs, confidence_scores, room_images, budget_max } = data;
+  
+  console.log('Design Results Data:', {
+    budget_max,
+    hasAgentOutputs: !!agent_outputs,
+    budgetData: agent_outputs?.budget_analysis,
+    productData: agent_outputs?.product_recommendations
+  });
 
   // Extract data
   const styleData = agent_outputs?.style_analysis || {};
   const productData = agent_outputs?.product_recommendations || {};
   const budgetData = agent_outputs?.budget_analysis || {};
   const products = productData?.selected_products || [];
+
+  const enhancedBudgetData = {
+    ...budgetData,
+    budget_max: budget_max  // ← Add budget from root level!
+  };
+
+  console.log('budget data kinoko',enhancedBudgetData);
 
   return (
     <div className="mt-4 space-y-4 w-full">
@@ -201,10 +215,9 @@ function DesignResults({ data }) {
         <ProductGallery products={products} />
       )}
 
-      {/*  NEW: Cost Breakdown */}
-      {(budgetData || productData) && (
+      {(enhancedBudgetData || productData) && (
         <CostBreakdown 
-          budgetData={budgetData} 
+          budgetData={enhancedBudgetData}  // ← Now has budget_max!
           productData={productData} 
         />
       )}

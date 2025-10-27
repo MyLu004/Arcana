@@ -15,9 +15,18 @@ class ArcanaAPI {
 
   /**
    * Generate design using multi-agent orchestration
+   * 🔥 FIXED: Added logging for debugging
    */
   async generateDesign(userPrompt, roomType = 'living_room', roomSize = 'medium', budget = null, controlImageUrl = null) {
     try {
+      console.log("📤 API generateDesign called with:", {
+        prompt: userPrompt,
+        room_type: roomType,
+        room_size: roomSize,
+        budget_max: budget,  // ← Budget is already here!
+        control_image_url: controlImageUrl
+      });
+
       const response = await fetch(`${API_BASE_URL}/agent/design/multi`, {
         method: 'POST',
         headers: {
@@ -28,21 +37,23 @@ class ArcanaAPI {
           room_type: roomType,
           room_size: roomSize,
           style_preferences: ['modern', 'minimalist'],
-          budget_max: budget,
+          budget_max: budget,  // ✅ Your code already has this!
           // optionally include a control image URL (from upload)
           ...(controlImageUrl ? { control_image_url: controlImageUrl } : {})
         })
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Design generation failed');
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || `Design generation failed: ${response.status}`);
       }
 
-      //return await response.json();
-      return await this._parseJsonSafe(response);
-    } catch (error) { //invalid return format
-      console.error('API Error - here1:', error);
+      const result = await this._parseJsonSafe(response);
+      console.log("📥 API response received:", result);
+      
+      return result;
+    } catch (error) {
+      console.error('❌ API Error:', error);
       throw error;
     }
   }
@@ -52,6 +63,8 @@ class ArcanaAPI {
    */
   async uploadImage(file) {
     try {
+      console.log("📤 Uploading image:", file.name, file.size, "bytes");
+      
       const formData = new FormData();
       formData.append('file', file);
 
@@ -61,12 +74,16 @@ class ArcanaAPI {
       });
 
       if (!response.ok) {
-        throw new Error('Image upload failed');
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || 'Image upload failed');
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log("📥 Image uploaded:", result);
+      
+      return result;
     } catch (error) {
-      console.error('Upload Error:', error);
+      console.error('❌ Upload Error:', error);
       throw error;
     }
   }
@@ -114,9 +131,5 @@ class ArcanaAPI {
   }
 }
 
-
-// my lu checking stuff for the backend
-
-
-
+// Export singleton instance
 export const api = new ArcanaAPI();

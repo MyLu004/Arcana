@@ -11,15 +11,51 @@ function CostBreakdown({ budgetData, productData }) {
     return null;
   }
 
-  // FIX: Get values safely with proper fallbacks
+  //  FIX: Get budget from the correct location
+  // Budget can come from multiple sources depending on data structure
   const subtotal = budgetData?.subtotal || productData?.total_estimated_cost || 0;
   const taxRate = 0.0825; // 8.25%
   const tax = budgetData?.tax || (subtotal * taxRate);
   const shipping = budgetData?.shipping ?? (subtotal < 1000 ? 150 : 0);
   const grandTotal = budgetData?.total || (subtotal + tax + shipping);
+
+  //  CRITICAL FIX: Check ALL possible budget locations
+  // Budget could be in: budgetData.budget_max, productData.budget_max, OR passed as separate prop
+  const rawBudgetMax = budgetData?.budget_max || productData?.budget_max;
+  const budgetMax = rawBudgetMax ? Number(rawBudgetMax) : null;
+
+  // Calculate percentage for progress bar
+  const budgetPercentage = budgetMax && budgetMax > 0 ? Math.min((grandTotal / budgetMax) * 100, 100) : 0;
+
+  console.log('Budget Debug:', { 
+    budgetData,
+    productData,
+    rawBudgetMax,
+    budgetMax,
+    grandTotal,
+    budgetPercentage
+  });
+
+  console.log('Budget Details:', { 
+    fromBudgetData: budgetData?.budget_max,
+    fromProductData: productData?.budget_max,
+    rawBudgetMax,
+    budgetMax,
+    grandTotal,
+    budgetPercentage,
+    budgetDataFull: budgetData,
+    productDataFull: productData
+  });
   
-  // CRITICAL FIX: Get budget_max properly, DON'T fall back to totalCost!
-  const budgetMax = budgetData?.budget_max;  // ← FIXED: No fallback to totalCost
+  // Debug logs
+  console.log('Budget Breakdown:', {
+    subtotal,
+    tax,
+    shipping,
+    grandTotal,
+    budgetMax,
+    percentage: budgetMax ? (grandTotal / budgetMax) * 100 : null
+  });
   
   // Calculate remaining and status
   let budgetRemaining = null;
@@ -113,12 +149,15 @@ function CostBreakdown({ budgetData, productData }) {
             </span>
           </div>
           
+          {/* Budget progress bar - shows percentage of total (including tax & shipping) against budget */}
           <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <div
               className={`h-3 rounded-full transition-all duration-500 ${
                 budgetRemaining >= 0 ? 'bg-green-500' : 'bg-red-500'
               }`}
-              style={{ width: `${Math.min((grandTotal / budgetMax) * 100, 100)}%` }}
+              style={{ 
+                width: budgetMax ? `${Math.min((grandTotal / budgetMax) * 100, 100)}%` : '0%'
+              }}
             />
           </div>
           
